@@ -904,7 +904,7 @@
     nextStep(2);
   }
 
-  function submitSurvey() {
+  async function submitSurvey() {
     if (interviewOptIn) {
       const email = document.getElementById('emailInput').value.trim();
       if (!email || !email.includes('@')) {
@@ -914,13 +914,15 @@
       }
       answers['interview_email'] = email;
     }
-    answers['interview_optin'] = interviewOptIn;
+    answers['interview_optin'] = interviewOptIn ? 'Yes' : 'No';
 
+    // Show thank you screen immediately
     document.getElementById('step7').classList.remove('active');
     currentStep = 8;
     document.getElementById('step8').classList.add('active');
     updateProgress();
 
+    // Build result summary
     const labels = {
       name: 'Name',
       contact_email: 'Email',
@@ -928,7 +930,8 @@
       challenge: 'Biggest Challenge',
       supervisor: 'Supervisor Meetings',
       ai_use: 'AI Tool Usage',
-      zoom: '15-min Zoom Meeting'
+      zoom: '15-min Zoom Meeting',
+      interview_optin: 'Interview Opt-in'
     };
 
     let html = '<h4>Your Responses</h4>';
@@ -941,16 +944,36 @@
       }
     }
 
-    if (interviewOptIn) {
+    if (interviewOptIn && answers['interview_email']) {
       html += `<div class="result-item">
-        <span class="result-key">Interview</span>
-        <span class="result-val" style="color:var(--green)">✅ You're in!</span>
+        <span class="result-key">Interview Email</span>
+        <span class="result-val" style="color:var(--green)">✅ ${answers['interview_email']}</span>
       </div>`;
     }
 
     document.getElementById('resultSummary').innerHTML = html;
     window.scrollTo({ top: 0, behavior: 'smooth' });
-    console.log('Survey submitted:', answers);
+
+    // Send to Formspree
+    try {
+      await fetch('https://formspree.io/f/mlgwwnny', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
+        body: JSON.stringify({
+          Name: answers['name'] || '',
+          Email: answers['contact_email'] || '',
+          'PhD Stage': answers['stage'] || '',
+          'Biggest Challenge': answers['challenge'] || '',
+          'Supervisor Meetings': answers['supervisor'] || '',
+          'AI Tool Usage': answers['ai_use'] || '',
+          'Zoom Meeting Interest': answers['zoom'] || '',
+          'Interview Opt-in': answers['interview_optin'] || 'No',
+          'Interview Email': answers['interview_email'] || 'N/A'
+        })
+      });
+    } catch (err) {
+      console.error('Formspree error:', err);
+    }
   }
 
   function shareLink() {
