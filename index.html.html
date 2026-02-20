@@ -1,0 +1,994 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>DocMentor AI — Help Shape the Future of PhD Support</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;1,400&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet"/>
+<style>
+  :root {
+    --cream: #faf6ef;
+    --cream-dark: #f0e9dc;
+    --green: #2d6a4f;
+    --green-light: #52b788;
+    --green-pale: #d8f3dc;
+    --green-mid: #74c69d;
+    --brown: #5c3d1e;
+    --text: #1a2e1a;
+    --text-muted: #6b7c6b;
+    --white: #ffffff;
+    --shadow: 0 4px 24px rgba(45,106,79,0.10);
+    --shadow-lg: 0 12px 48px rgba(45,106,79,0.15);
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    font-family: 'DM Sans', sans-serif;
+    background: var(--cream);
+    color: var(--text);
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  /* Background texture */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image:
+      radial-gradient(circle at 20% 20%, rgba(82,183,136,0.08) 0%, transparent 50%),
+      radial-gradient(circle at 80% 80%, rgba(45,106,79,0.06) 0%, transparent 50%),
+      radial-gradient(circle at 60% 10%, rgba(116,198,157,0.05) 0%, transparent 40%);
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  .container { max-width: 720px; margin: 0 auto; padding: 0 24px; position: relative; z-index: 1; }
+
+  /* ── HERO ── */
+  .hero {
+    padding: 72px 0 48px;
+    text-align: center;
+    animation: fadeUp 0.8s ease both;
+  }
+
+  .badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    background: var(--green-pale);
+    color: var(--green);
+    font-size: 13px;
+    font-weight: 600;
+    letter-spacing: 0.04em;
+    padding: 6px 16px;
+    border-radius: 100px;
+    margin-bottom: 28px;
+    border: 1px solid rgba(45,106,79,0.15);
+  }
+
+  .badge-dot {
+    width: 7px; height: 7px;
+    background: var(--green-light);
+    border-radius: 50%;
+    animation: pulse 2s infinite;
+  }
+
+  h1 {
+    font-family: 'Playfair Display', serif;
+    font-size: clamp(36px, 6vw, 56px);
+    line-height: 1.15;
+    color: var(--text);
+    margin-bottom: 20px;
+    letter-spacing: -0.02em;
+  }
+
+  h1 em {
+    color: var(--green);
+    font-style: italic;
+  }
+
+  .hero-sub {
+    font-size: 17px;
+    line-height: 1.7;
+    color: var(--text-muted);
+    max-width: 520px;
+    margin: 0 auto 36px;
+    font-weight: 400;
+  }
+
+  .hero-stats {
+    display: flex;
+    justify-content: center;
+    gap: 40px;
+    flex-wrap: wrap;
+    margin-bottom: 16px;
+  }
+
+  .stat {
+    text-align: center;
+    animation: fadeUp 0.8s ease both;
+  }
+
+  .stat:nth-child(2) { animation-delay: 0.1s; }
+  .stat:nth-child(3) { animation-delay: 0.2s; }
+
+  .stat-num {
+    font-family: 'Playfair Display', serif;
+    font-size: 32px;
+    font-weight: 700;
+    color: var(--green);
+    display: block;
+  }
+
+  .stat-label {
+    font-size: 13px;
+    color: var(--text-muted);
+    font-weight: 500;
+  }
+
+  /* ── SURVEY CARD ── */
+  .survey-card {
+    background: var(--white);
+    border-radius: 24px;
+    padding: 48px;
+    box-shadow: var(--shadow-lg);
+    margin-bottom: 48px;
+    border: 1px solid rgba(45,106,79,0.08);
+    animation: fadeUp 0.8s ease 0.2s both;
+  }
+
+  .survey-header {
+    text-align: center;
+    margin-bottom: 40px;
+  }
+
+  .survey-header h2 {
+    font-family: 'Playfair Display', serif;
+    font-size: 26px;
+    color: var(--text);
+    margin-bottom: 8px;
+  }
+
+  .survey-header p {
+    color: var(--text-muted);
+    font-size: 15px;
+  }
+
+  /* Progress bar */
+  .progress-wrap {
+    margin-bottom: 36px;
+  }
+
+  .progress-info {
+    display: flex;
+    justify-content: space-between;
+    font-size: 13px;
+    color: var(--text-muted);
+    margin-bottom: 8px;
+    font-weight: 500;
+  }
+
+  .progress-bar {
+    height: 6px;
+    background: var(--cream-dark);
+    border-radius: 100px;
+    overflow: hidden;
+  }
+
+  .progress-fill {
+    height: 100%;
+    background: linear-gradient(90deg, var(--green-light), var(--green));
+    border-radius: 100px;
+    transition: width 0.5s cubic-bezier(0.4,0,0.2,1);
+    width: 20%;
+  }
+
+  /* Steps */
+  .step { display: none; animation: fadeUp 0.4s ease both; }
+  .step.active { display: block; }
+
+  .question-label {
+    font-size: 18px;
+    font-weight: 600;
+    color: var(--text);
+    margin-bottom: 6px;
+    line-height: 1.4;
+  }
+
+  .question-hint {
+    font-size: 14px;
+    color: var(--text-muted);
+    margin-bottom: 20px;
+  }
+
+  /* Option buttons */
+  .options { display: flex; flex-direction: column; gap: 10px; }
+
+  .option {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    padding: 14px 18px;
+    border: 2px solid var(--cream-dark);
+    border-radius: 12px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    background: var(--cream);
+    font-size: 15px;
+    font-weight: 500;
+    color: var(--text);
+    text-align: left;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .option::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: var(--green-pale);
+    opacity: 0;
+    transition: opacity 0.2s;
+  }
+
+  .option:hover { border-color: var(--green-light); transform: translateX(4px); }
+  .option:hover::before { opacity: 0.4; }
+
+  .option.selected {
+    border-color: var(--green);
+    background: var(--green-pale);
+    color: var(--green);
+  }
+
+  .option.selected::before { opacity: 1; }
+
+  .option-icon {
+    width: 36px; height: 36px;
+    border-radius: 10px;
+    background: var(--cream-dark);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 18px;
+    flex-shrink: 0;
+    position: relative;
+    z-index: 1;
+    transition: background 0.2s;
+  }
+
+  .option.selected .option-icon { background: rgba(45,106,79,0.15); }
+
+  .option-text { position: relative; z-index: 1; }
+
+  /* Grid options for 2-col */
+  .options-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+  }
+
+  @media (max-width: 500px) { .options-grid { grid-template-columns: 1fr; } }
+
+  /* Text input */
+  .text-input {
+    width: 100%;
+    padding: 14px 18px;
+    border: 2px solid var(--cream-dark);
+    border-radius: 12px;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 15px;
+    color: var(--text);
+    background: var(--cream);
+    outline: none;
+    transition: border-color 0.2s;
+    resize: none;
+  }
+
+  .text-input:focus { border-color: var(--green-light); background: var(--white); }
+
+  /* Navigation */
+  .nav-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: 32px;
+    gap: 12px;
+  }
+
+  .btn-back {
+    padding: 12px 24px;
+    border-radius: 12px;
+    border: 2px solid var(--cream-dark);
+    background: transparent;
+    color: var(--text-muted);
+    font-family: 'DM Sans', sans-serif;
+    font-size: 15px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+
+  .btn-back:hover { border-color: var(--green-light); color: var(--green); }
+
+  .btn-next {
+    padding: 14px 32px;
+    border-radius: 12px;
+    border: none;
+    background: var(--green);
+    color: var(--white);
+    font-family: 'DM Sans', sans-serif;
+    font-size: 15px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex: 1;
+    justify-content: center;
+    max-width: 220px;
+    margin-left: auto;
+  }
+
+  .btn-next:hover { background: #245a40; transform: translateY(-1px); box-shadow: 0 6px 20px rgba(45,106,79,0.3); }
+  .btn-next:disabled { opacity: 0.4; cursor: not-allowed; transform: none; box-shadow: none; }
+
+  /* Interview opt-in step */
+  .interview-card {
+    background: linear-gradient(135deg, var(--green-pale) 0%, rgba(116,198,157,0.2) 100%);
+    border: 2px solid rgba(45,106,79,0.2);
+    border-radius: 16px;
+    padding: 28px;
+    margin-bottom: 20px;
+    text-align: center;
+  }
+
+  .interview-emoji { font-size: 40px; margin-bottom: 12px; }
+
+  .interview-card h3 {
+    font-family: 'Playfair Display', serif;
+    font-size: 22px;
+    color: var(--text);
+    margin-bottom: 8px;
+  }
+
+  .interview-card p {
+    font-size: 14px;
+    color: var(--text-muted);
+    line-height: 1.6;
+    margin-bottom: 20px;
+  }
+
+  .interview-perks {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    text-align: left;
+    margin-bottom: 20px;
+  }
+
+  .perk {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 14px;
+    color: var(--text);
+    font-weight: 500;
+  }
+
+  .perk-icon {
+    width: 28px; height: 28px;
+    background: var(--green);
+    border-radius: 8px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 13px;
+    flex-shrink: 0;
+  }
+
+  .toggle-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    background: var(--white);
+    border-radius: 12px;
+    padding: 14px 18px;
+    border: 2px solid var(--cream-dark);
+    cursor: pointer;
+    transition: border-color 0.2s;
+  }
+
+  .toggle-row:hover { border-color: var(--green-light); }
+  .toggle-row.active { border-color: var(--green); }
+
+  .toggle-label { font-size: 15px; font-weight: 600; color: var(--text); }
+
+  .toggle {
+    width: 44px; height: 24px;
+    background: var(--cream-dark);
+    border-radius: 100px;
+    position: relative;
+    transition: background 0.2s;
+    flex-shrink: 0;
+  }
+
+  .toggle.on { background: var(--green); }
+
+  .toggle-knob {
+    width: 18px; height: 18px;
+    background: white;
+    border-radius: 50%;
+    position: absolute;
+    top: 3px; left: 3px;
+    transition: transform 0.2s;
+    box-shadow: 0 1px 4px rgba(0,0,0,0.2);
+  }
+
+  .toggle.on .toggle-knob { transform: translateX(20px); }
+
+  .email-field { display: none; margin-top: 12px; }
+  .email-field.show { display: block; animation: fadeUp 0.3s ease both; }
+
+  /* Thank you */
+  .thankyou { text-align: center; padding: 20px 0; animation: fadeUp 0.6s ease both; }
+  .thankyou-icon { font-size: 64px; margin-bottom: 20px; display: block; animation: bounceIn 0.6s ease both; }
+
+  .thankyou h2 {
+    font-family: 'Playfair Display', serif;
+    font-size: 32px;
+    color: var(--text);
+    margin-bottom: 12px;
+  }
+
+  .thankyou p {
+    font-size: 16px;
+    color: var(--text-muted);
+    line-height: 1.7;
+    max-width: 420px;
+    margin: 0 auto 32px;
+  }
+
+  .result-summary {
+    background: var(--cream);
+    border-radius: 16px;
+    padding: 24px;
+    text-align: left;
+    margin-bottom: 28px;
+    border: 1px solid var(--cream-dark);
+  }
+
+  .result-summary h4 {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    margin-bottom: 16px;
+  }
+
+  .result-item {
+    display: flex;
+    justify-content: space-between;
+    padding: 8px 0;
+    border-bottom: 1px solid var(--cream-dark);
+    font-size: 14px;
+  }
+
+  .result-item:last-child { border-bottom: none; }
+  .result-key { color: var(--text-muted); }
+  .result-val { color: var(--text); font-weight: 600; }
+
+  .share-btn {
+    width: 100%;
+    padding: 16px;
+    border-radius: 14px;
+    border: none;
+    background: var(--green);
+    color: white;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 16px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+
+  .share-btn:hover { background: #245a40; transform: translateY(-2px); box-shadow: 0 8px 24px rgba(45,106,79,0.3); }
+
+  /* Footer */
+  .footer {
+    text-align: center;
+    padding: 32px 0 48px;
+    font-size: 13px;
+    color: var(--text-muted);
+    animation: fadeUp 0.8s ease 0.4s both;
+  }
+
+  .footer strong { color: var(--green); }
+
+  /* Animations */
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(20px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  @keyframes pulse {
+    0%, 100% { opacity: 1; transform: scale(1); }
+    50% { opacity: 0.6; transform: scale(0.85); }
+  }
+
+  @keyframes bounceIn {
+    0% { transform: scale(0.5); opacity: 0; }
+    70% { transform: scale(1.1); }
+    100% { transform: scale(1); opacity: 1; }
+  }
+
+  /* Decorative leaf */
+  .leaf {
+    position: fixed;
+    opacity: 0.04;
+    font-size: 200px;
+    pointer-events: none;
+    z-index: 0;
+    user-select: none;
+  }
+  .leaf-1 { top: -40px; right: -40px; transform: rotate(30deg); }
+  .leaf-2 { bottom: -40px; left: -40px; transform: rotate(200deg); }
+</style>
+</head>
+<body>
+
+<div class="leaf leaf-1">🌿</div>
+<div class="leaf leaf-2">🌿</div>
+
+<div class="container">
+
+  <!-- HERO -->
+  <div class="hero">
+    <div class="badge">
+      <span class="badge-dot"></span>
+      Calling all PhD & Doctorate Students
+    </div>
+    <h1>Help us build your<br/><em>perfect PhD mentor</em></h1>
+    <p class="hero-sub">We're building DocMentor AI — an intelligent companion for your doctorate journey. Take our 2-minute survey and help shape something made just for you.</p>
+    <div class="hero-stats">
+      <div class="stat">
+        <span class="stat-num">2 min</span>
+        <span class="stat-label">to complete</span>
+      </div>
+      <div class="stat">
+        <span class="stat-num">5</span>
+        <span class="stat-label">quick questions</span>
+      </div>
+      <div class="stat">
+        <span class="stat-num">100%</span>
+        <span class="stat-label">anonymous</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- SURVEY CARD -->
+  <div class="survey-card">
+
+    <div class="survey-header">
+      <h2>Share Your Experience 📖</h2>
+      <p>Your answers directly shape what we build</p>
+    </div>
+
+    <!-- Progress -->
+    <div class="progress-wrap">
+      <div class="progress-info">
+        <span id="progressLabel">Question 1 of 5</span>
+        <span id="progressPct">20%</span>
+      </div>
+      <div class="progress-bar">
+        <div class="progress-fill" id="progressFill"></div>
+      </div>
+    </div>
+
+    <!-- STEP 1: Name & Email -->
+    <div class="step active" id="step1">
+      <div class="question-label">First, let's get to know you 👋</div>
+      <div class="question-hint">Add your name and email so we can keep you updated on DocMentor AI and share early access when we launch.</div>
+      <div style="display:flex; flex-direction:column; gap:14px; margin-top:8px;">
+        <div>
+          <label style="font-size:13px; font-weight:600; color:var(--text-muted); display:block; margin-bottom:6px; letter-spacing:0.03em;">FULL NAME</label>
+          <input type="text" class="text-input" id="nameInput" placeholder="e.g. Sarah Johnson" />
+        </div>
+        <div>
+          <label style="font-size:13px; font-weight:600; color:var(--text-muted); display:block; margin-bottom:6px; letter-spacing:0.03em;">EMAIL ADDRESS</label>
+          <input type="email" class="text-input" id="contactEmailInput" placeholder="e.g. sarah@university.edu" />
+        </div>
+        <div style="background:var(--green-pale); border-radius:12px; padding:14px 16px; display:flex; align-items:center; gap:10px; border:1px solid rgba(45,106,79,0.15);">
+          <span style="font-size:18px;">🔒</span>
+          <span style="font-size:13px; color:var(--text-muted); line-height:1.5;">Your details are safe with us. We'll only contact you about DocMentor AI — no spam, ever. You can unsubscribe anytime.</span>
+        </div>
+      </div>
+      <div class="nav-row">
+        <div></div>
+        <button class="btn-next" id="next1" onclick="validateContact()" style="max-width:220px;">Continue →</button>
+      </div>
+    </div>
+
+    <!-- STEP 2: PhD Stage -->
+    <div class="step" id="step2">
+      <div class="question-label">What stage of your PhD are you in?</div>
+      <div class="question-hint">Select the option that best describes where you are right now.</div>
+      <div class="options">
+        <button class="option" onclick="selectOption(this, 'stage', 'Year 1 — Just getting started')">
+          <span class="option-icon">🌱</span>
+          <span class="option-text">Year 1 — Just getting started</span>
+        </button>
+        <button class="option" onclick="selectOption(this, 'stage', 'Year 2 — Deep in research')">
+          <span class="option-icon">📚</span>
+          <span class="option-text">Year 2 — Deep in research</span>
+        </button>
+        <button class="option" onclick="selectOption(this, 'stage', 'Year 3 — Writing my thesis')">
+          <span class="option-icon">✍️</span>
+          <span class="option-text">Year 3 — Writing my thesis</span>
+        </button>
+        <button class="option" onclick="selectOption(this, 'stage', 'Year 4+ — Final stretch')">
+          <span class="option-icon">🏁</span>
+          <span class="option-text">Year 4+ — Final stretch</span>
+        </button>
+      </div>
+      <div class="nav-row">
+        <button class="btn-back" onclick="prevStep(1)">← Back</button>
+        <button class="btn-next" id="next2" onclick="nextStep(3)" disabled>Continue →</button>
+      </div>
+    </div>
+
+    <!-- STEP 3: Biggest challenge -->
+    <div class="step" id="step3">
+      <div class="question-label">What's your biggest challenge right now?</div>
+      <div class="question-hint">Pick the one that feels most difficult.</div>
+      <div class="options">
+        <button class="option" onclick="selectOption(this, 'challenge', 'Writing & thesis structure')">
+          <span class="option-icon">📝</span>
+          <span class="option-text">Writing & thesis structure</span>
+        </button>
+        <button class="option" onclick="selectOption(this, 'challenge', 'Research direction & methodology')">
+          <span class="option-icon">🔬</span>
+          <span class="option-text">Research direction & methodology</span>
+        </button>
+        <button class="option" onclick="selectOption(this, 'challenge', 'Motivation & burnout')">
+          <span class="option-icon">🔋</span>
+          <span class="option-text">Motivation & burnout</span>
+        </button>
+        <button class="option" onclick="selectOption(this, 'challenge', 'Managing time & deadlines')">
+          <span class="option-icon">⏰</span>
+          <span class="option-text">Managing time & deadlines</span>
+        </button>
+        <button class="option" onclick="selectOption(this, 'challenge', 'Lack of supervisor support')">
+          <span class="option-icon">👤</span>
+          <span class="option-text">Lack of supervisor support</span>
+        </button>
+      </div>
+      <div class="nav-row">
+        <button class="btn-back" onclick="prevStep(2)">← Back</button>
+        <button class="btn-next" id="next3" onclick="nextStep(4)" disabled>Continue →</button>
+      </div>
+    </div>
+
+    <!-- STEP 4: Supervisor meetings -->
+    <div class="step" id="step4">
+      <div class="question-label">How often do you meet your supervisor?</div>
+      <div class="question-hint">Be honest — there's no wrong answer here!</div>
+      <div class="options-grid options">
+        <button class="option" onclick="selectOption(this, 'supervisor', 'Weekly')">
+          <span class="option-icon">🗓️</span>
+          <span class="option-text">Weekly</span>
+        </button>
+        <button class="option" onclick="selectOption(this, 'supervisor', 'Every 2 weeks')">
+          <span class="option-icon">📅</span>
+          <span class="option-text">Every 2 weeks</span>
+        </button>
+        <button class="option" onclick="selectOption(this, 'supervisor', 'Monthly')">
+          <span class="option-icon">🌙</span>
+          <span class="option-text">Monthly</span>
+        </button>
+        <button class="option" onclick="selectOption(this, 'supervisor', 'Rarely / when I chase')">
+          <span class="option-icon">🏃</span>
+          <span class="option-text">Rarely / when I chase</span>
+        </button>
+      </div>
+      <div class="nav-row">
+        <button class="btn-back" onclick="prevStep(3)">← Back</button>
+        <button class="btn-next" id="next4" onclick="nextStep(5)" disabled>Continue →</button>
+      </div>
+    </div>
+
+    <!-- STEP 5: AI tools -->
+    <div class="step" id="step5">
+      <div class="question-label">Have you used AI tools for your research?</div>
+      <div class="question-hint">Tools like ChatGPT, Claude, Grammarly, etc.</div>
+      <div class="options">
+        <button class="option" onclick="selectOption(this, 'ai_use', 'Yes, regularly — it saves me hours')">
+          <span class="option-icon">🚀</span>
+          <span class="option-text">Yes, regularly — it saves me hours</span>
+        </button>
+        <button class="option" onclick="selectOption(this, 'ai_use', 'Sometimes, but unsure how to use it well')">
+          <span class="option-icon">🤔</span>
+          <span class="option-text">Sometimes, but unsure how to use it well</span>
+        </button>
+        <button class="option" onclick="selectOption(this, 'ai_use', 'Tried it once or twice')">
+          <span class="option-icon">👆</span>
+          <span class="option-text">Tried it once or twice</span>
+        </button>
+        <button class="option" onclick="selectOption(this, 'ai_use', 'No — skeptical or haven\'t tried')">
+          <span class="option-icon">🙅</span>
+          <span class="option-text">No — skeptical or haven't tried</span>
+        </button>
+      </div>
+      <div class="nav-row">
+        <button class="btn-back" onclick="prevStep(4)">← Back</button>
+        <button class="btn-next" id="next5" onclick="nextStep(6)" disabled>Continue →</button>
+      </div>
+    </div>
+
+    <!-- STEP 6: Zoom meeting -->
+    <div class="step" id="step6">
+      <div class="question-label">Would you like to talk with our product manager for a 15-min Zoom meeting?</div>
+      <div class="question-hint">Help us build an AI product designed specifically for students like you — your voice matters!</div>
+      <div class="options">
+        <button class="option" onclick="selectOption(this, 'zoom', 'Yes — I\'d love to help shape this product')">
+          <span class="option-icon">🙋</span>
+          <span class="option-text">Yes — I'd love to help shape this product</span>
+        </button>
+        <button class="option" onclick="selectOption(this, 'zoom', 'Maybe — tell me more first')">
+          <span class="option-icon">🤔</span>
+          <span class="option-text">Maybe — tell me more first</span>
+        </button>
+        <button class="option" onclick="selectOption(this, 'zoom', 'Not right now, but keep me updated')">
+          <span class="option-icon">📬</span>
+          <span class="option-text">Not right now, but keep me updated</span>
+        </button>
+        <button class="option" onclick="selectOption(this, 'zoom', 'No thanks')">
+          <span class="option-icon">👋</span>
+          <span class="option-text">No thanks</span>
+        </button>
+      </div>
+      <div class="nav-row">
+        <button class="btn-back" onclick="prevStep(5)">← Back</button>
+        <button class="btn-next" id="next6" onclick="nextStep(7)" disabled>Continue →</button>
+      </div>
+    </div>
+
+    <!-- STEP 7: Interview opt-in -->
+    <div class="step" id="step7">
+      <div class="interview-card">
+        <div class="interview-emoji">🎙️</div>
+        <h3>Want to go deeper?</h3>
+        <p>We're looking for doctorate students to join a 20-minute 1-on-1 interview. Your insights will directly shape DocMentor AI.</p>
+        <div class="interview-perks">
+          <div class="perk">
+            <div class="perk-icon">⏱️</div>
+            Just 20 minutes of your time
+          </div>
+          <div class="perk">
+            <div class="perk-icon">🎁</div>
+            Early free access to DocMentor AI
+          </div>
+          <div class="perk">
+            <div class="perk-icon">🌍</div>
+            Done remotely via Google Meet or Zoom
+          </div>
+          <div class="perk">
+            <div class="perk-icon">💬</div>
+            Your voice shapes what we build
+          </div>
+        </div>
+      </div>
+
+      <div class="toggle-row" id="interviewToggle" onclick="toggleInterview()">
+        <span class="toggle-label">Yes, I'd love to be interviewed!</span>
+        <div class="toggle" id="toggleEl">
+          <div class="toggle-knob"></div>
+        </div>
+      </div>
+
+      <div class="email-field" id="emailField">
+        <br/>
+        <input type="email" class="text-input" id="emailInput" placeholder="Your email address" />
+        <div style="font-size:12px; color: var(--text-muted); margin-top: 8px; padding-left: 4px;">
+          🔒 We'll only use this to schedule your interview. No spam, ever.
+        </div>
+      </div>
+
+      <div class="nav-row">
+        <button class="btn-back" onclick="prevStep(6)">← Back</button>
+        <button class="btn-next" id="next7" onclick="submitSurvey()" style="max-width:260px;">Submit & See Results →</button>
+      </div>
+    </div>
+
+    <!-- STEP 8: Thank you -->
+    <div class="step" id="step8">
+      <div class="thankyou">
+        <span class="thankyou-icon">🎉</span>
+        <h2>Thank you so much!</h2>
+        <p>Your responses will directly influence how we build DocMentor AI. We're building this for students like you — and you've just helped make it better.</p>
+
+        <div class="result-summary" id="resultSummary"></div>
+
+        <button class="share-btn" onclick="shareLink()">
+          🌿 Share with a fellow PhD student
+        </button>
+      </div>
+    </div>
+
+  </div><!-- end survey card -->
+
+  <div class="footer">
+    Built with care by <strong>DocMentor AI</strong> · Helping doctorate students finish what they started · <strong>docmentor.ai</strong>
+  </div>
+
+</div><!-- end container -->
+
+<script>
+  const answers = {};
+  let interviewOptIn = false;
+  let currentStep = 1;
+  const totalSteps = 7;
+
+  function selectOption(el, key, value) {
+    // Deselect siblings
+    const parent = el.closest('.options, .options-grid');
+    parent.querySelectorAll('.option').forEach(o => o.classList.remove('selected'));
+    el.classList.add('selected');
+    answers[key] = value;
+
+    // Enable next button
+    const nextBtn = document.getElementById('next' + currentStep);
+    if (nextBtn) nextBtn.disabled = false;
+  }
+
+  function nextStep(n) {
+    document.getElementById('step' + currentStep).classList.remove('active');
+    currentStep = n;
+    document.getElementById('step' + currentStep).classList.add('active');
+    updateProgress();
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }
+
+  function prevStep(n) {
+    document.getElementById('step' + currentStep).classList.remove('active');
+    currentStep = n;
+    document.getElementById('step' + currentStep).classList.add('active');
+    updateProgress();
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }
+
+  function updateProgress() {
+    const displayStep = Math.min(currentStep, totalSteps);
+    const pct = Math.round((displayStep / totalSteps) * 100);
+    document.getElementById('progressFill').style.width = pct + '%';
+    document.getElementById('progressPct').textContent = pct + '%';
+
+    if (currentStep <= totalSteps) {
+      const label = currentStep === 1 ? 'Step 1 of ' + totalSteps : 'Question ' + (currentStep - 1) + ' of ' + (totalSteps - 1);
+      document.getElementById('progressLabel').textContent = label;
+    } else {
+      document.getElementById('progressLabel').textContent = 'Almost done!';
+      document.getElementById('progressFill').style.width = '100%';
+      document.getElementById('progressPct').textContent = '100%';
+    }
+  }
+
+  function toggleInterview() {
+    interviewOptIn = !interviewOptIn;
+    const toggle = document.getElementById('toggleEl');
+    const row = document.getElementById('interviewToggle');
+    const emailField = document.getElementById('emailField');
+
+    toggle.classList.toggle('on', interviewOptIn);
+    row.classList.toggle('active', interviewOptIn);
+    emailField.classList.toggle('show', interviewOptIn);
+
+    if (interviewOptIn) {
+      document.getElementById('emailInput').focus();
+    }
+  }
+
+  function validateContact() {
+    const name = document.getElementById('nameInput').value.trim();
+    const email = document.getElementById('contactEmailInput').value.trim();
+    const nameInput = document.getElementById('nameInput');
+    const emailInput = document.getElementById('contactEmailInput');
+
+    nameInput.style.borderColor = '';
+    emailInput.style.borderColor = '';
+
+    if (!name) { nameInput.style.borderColor = '#e74c3c'; nameInput.focus(); return; }
+    if (!email || !email.includes('@')) { emailInput.style.borderColor = '#e74c3c'; emailInput.focus(); return; }
+
+    answers['name'] = name;
+    answers['contact_email'] = email;
+    nextStep(2);
+  }
+
+  async function submitSurvey() {
+    if (interviewOptIn) {
+      const email = document.getElementById('emailInput').value.trim();
+      if (!email || !email.includes('@')) {
+        document.getElementById('emailInput').style.borderColor = '#e74c3c';
+        document.getElementById('emailInput').focus();
+        return;
+      }
+      answers['interview_email'] = email;
+    }
+    answers['interview_optin'] = interviewOptIn ? 'Yes' : 'No';
+
+    // Show thank you screen immediately
+    document.getElementById('step7').classList.remove('active');
+    currentStep = 8;
+    document.getElementById('step8').classList.add('active');
+    updateProgress();
+
+    // Build result summary
+    const labels = {
+      name: 'Name',
+      contact_email: 'Email',
+      stage: 'PhD Stage',
+      challenge: 'Biggest Challenge',
+      supervisor: 'Supervisor Meetings',
+      ai_use: 'AI Tool Usage',
+      zoom: '15-min Zoom Meeting',
+      interview_optin: 'Interview Opt-in'
+    };
+
+    let html = '<h4>Your Responses</h4>';
+    for (const [key, label] of Object.entries(labels)) {
+      if (answers[key]) {
+        html += `<div class="result-item">
+          <span class="result-key">${label}</span>
+          <span class="result-val">${answers[key]}</span>
+        </div>`;
+      }
+    }
+
+    if (interviewOptIn && answers['interview_email']) {
+      html += `<div class="result-item">
+        <span class="result-key">Interview Email</span>
+        <span class="result-val" style="color:var(--green)">✅ ${answers['interview_email']}</span>
+      </div>`;
+    }
+
+    document.getElementById('resultSummary').innerHTML = html;
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+
+    // Send to Formspree
+    try {
+      await fetch('https://formspree.io/f/xvzbbjra', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
+        body: JSON.stringify({
+          Name: answers['name'] || '',
+          Email: answers['contact_email'] || '',
+          'PhD Stage': answers['stage'] || '',
+          'Biggest Challenge': answers['challenge'] || '',
+          'Supervisor Meetings': answers['supervisor'] || '',
+          'AI Tool Usage': answers['ai_use'] || '',
+          'Zoom Meeting Interest': answers['zoom'] || '',
+          'Interview Opt-in': answers['interview_optin'] || 'No',
+          'Interview Email': answers['interview_email'] || 'N/A'
+        })
+      });
+    } catch (err) {
+      console.error('Formspree error:', err);
+    }
+  }
+
+  function shareLink() {
+    if (navigator.share) {
+      navigator.share({
+        title: 'DocMentor AI Survey',
+        text: 'Help shape an AI mentor for PhD students — takes 2 minutes!',
+        url: window.location.href
+      });
+    } else {
+      navigator.clipboard.writeText(window.location.href).then(() => {
+        alert('Link copied! Share it with your PhD friends 🎓');
+      });
+    }
+  }
+</script>
+</body>
+</html>
