@@ -1,0 +1,403 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>PhD Dropout Visualizer (Category-wise, Last 10 Years)</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+  <!-- CDN dependencies (no local files needed) -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
+  <style>
+    :root {
+      --bg: #0b1220;
+      --panel: #121a2b;
+      --accent: #4f8cff;
+      --text: #e6eefc;
+      --muted: #98a2b3;
+      --ok: #16a34a;
+      --warn: #f59e0b;
+      --bad: #ef4444;
+      --chip: #1f2a44;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: Inter, system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+    }
+    header {
+      padding: 24px 20px;
+      border-bottom: 1px solid #1d2a44;
+      background: linear-gradient(180deg, rgba(79,140,255,0.07), rgba(79,140,255,0));
+    }
+    .wrap { max-width: 1100px; margin: 0 auto; }
+    h1 { margin: 0 0 8px; font-size: 22px; }
+    p.lead { margin: 0; color: var(--muted); }
+    .panel { background: var(--panel); border: 1px solid #1d2a44; border-radius: 12px; padding: 16px; }
+    .grid { display: grid; grid-template-columns: 1.25fr .75fr; gap: 16px; margin: 16px 0; }
+    .controls { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+    .controls > * { margin: 4px 0; }
+    .btn {
+      background: var(--chip); color: var(--text); border: 1px solid #2a375c;
+      border-radius: 8px; padding: 8px 12px; cursor: pointer; font-size: 13px;
+    }
+    .btn.primary { background: var(--accent); border-color: var(--accent); color: white; }
+    .btn.ghost { background: transparent; }
+    input[type="file"] { display: none; }
+    label.file-label {
+      border: 1px dashed #2a375c; background: rgba(79,140,255,0.06);
+      padding: 10px 12px; border-radius: 10px; cursor: pointer; font-size: 13px;
+      color: var(--text);
+    }
+    .chips { display: flex; flex-wrap: wrap; gap: 8px; }
+    .chip { background: var(--chip); border: 1px solid #2a375c; padding: 6px 10px; border-radius: 999px; font-size: 12px; }
+    .aside { font-size: 13px; color: var(--muted); }
+    .aside ul { margin: 8px 0 0; padding-left: 18px; line-height: 1.8; }
+    .legend { display: flex; flex-wrap: wrap; gap: 8px; margin: 8px 0 0; }
+    .legend .item { display: flex; align-items: center; gap: 6px; font-size: 12px; }
+    .swatch { width: 12px; height: 12px; border-radius: 2px; display: inline-block; }
+    .two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+    .tbl { width: 100%; border-collapse: collapse; font-size: 13px; }
+    .tbl th, .tbl td { padding: 8px 10px; border-bottom: 1px solid #1d2a44; }
+    .tbl th { text-align: left; color: var(--muted); font-weight: 600; }
+    .heatmap {
+      width: 100%; overflow-x: auto; border: 1px solid #1d2a44;
+      border-radius: 10px; padding: 8px; background: #0d1526;
+    }
+    .heatgrid { display: grid; gap: 2px; }
+    .heatcell { text-align: center; padding: 8px 4px; border-radius: 4px; font-size: 12px; }
+    footer { color: var(--muted); padding: 20px; font-size: 12px; }
+    a { color: #7fb0ff; }
+    @media (max-width: 900px) { .grid { grid-template-columns: 1fr; } }
+  </style>
+</head>
+<body>
+
+<header>
+  <div class="wrap">
+    <h1>PhD Dropout Visualizer — Category-wise (Last 10 Years)</h1>
+    <p class="lead">Upload a CSV (year, field, dropout_rate) to explore attrition trends by discipline. A demo dataset is included.</p>
+  </div>
+</header>
+
+<main class="wrap" style="padding: 16px 20px 32px;">
+
+  <div class="panel">
+    <div class="controls">
+      <label for="file" class="file-label">📄 Upload CSV</label>
+      <input id="file" type="file" accept=".csv">
+      <button id="use-sample" class="btn">Use demo data</button>
+      <button id="download-template" class="btn ghost">⬇️ Download template CSV</button>
+      <button id="reset-filters" class="btn ghost">Reset filters</button>
+      <div class="chip">Expected columns: <code>year, field, dropout_rate</code></div>
+    </div>
+    <div style="margin-top:8px" class="aside">
+      Note: The bundled demo data is <strong>synthetic</strong>, provided only to showcase the charts. Replace with your official data source.
+    </div>
+  </div>
+
+  <div class="grid">
+    <div class="panel">
+      <div class="controls" style="justify-content: space-between;">
+        <div style="display:flex; gap:8px; align-items:center;">
+          <button data-chart="line" class="btn">Line</button>
+          <button data-chart="bar" class="btn primary">Grouped Bar</button>
+        </div>
+        <div style="display:flex; gap:8px; align-items:center; flex-wrap:wrap;">
+          <label style="font-size:13px;">Fields:</label>
+          <div id="field-chips" class="chips"></div>
+        </div>
+      </div>
+      <canvas id="chart" style="margin-top:12px;"></canvas>
+      <div class="legend" id="legend"></div>
+    </div>
+
+    <div class="panel">
+      <h3 style="margin-top:0; font-size:16px;">Heatmap</h3>
+      <div class="heatmap">
+        <div id="heatgrid" class="heatgrid"></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="panel" style="margin-bottom:16px;">
+    <h3 style="margin:0 0 8px; font-size:16px;">Data Preview</h3>
+    <div style="max-height:300px; overflow-y:auto;">
+      <table class="tbl" id="table">
+        <thead><tr><th>Year</th><th>Field</th><th>Dropout Rate (%)</th></tr></thead>
+        <tbody></tbody>
+      </table>
+    </div>
+  </div>
+
+  <div class="panel aside">
+    <strong>Methodology &amp; Caveats</strong>
+    <ul>
+      <li>"Dropout rate" is assumed as the share of doctoral entrants who leave without completing within a defined window. Different sources may define windows differently (e.g., 6 vs. 8 years). Ensure consistent definitions across years/fields.</li>
+      <li>The demo dataset included here is <strong>synthetic</strong> and for visualization only. Replace it with official data from your institution, national agencies, or field studies.</li>
+      <li>Suggested sources for real data: department/institution reports, national statistical agencies, or field-specific completion projects. Document your sources in your project README.</li>
+    </ul>
+  </div>
+
+</main>
+
+<footer class="wrap">
+  Built for quick exploration. No tracking. Libraries: Chart.js &amp; PapaParse via CDN.
+</footer>
+
+<script>
+  // ── Demo data (embedded — no external CSV file needed) ──
+  const DEMO_CSV = `year,field,dropout_rate
+2016,Business,27
+2016,Engineering,28
+2016,Humanities,50
+2016,Natural Sciences,36
+2016,Social Sciences,43
+2017,Business,27
+2017,Engineering,28
+2017,Humanities,49
+2017,Natural Sciences,36
+2017,Social Sciences,43
+2018,Business,26
+2018,Engineering,27
+2018,Humanities,49
+2018,Natural Sciences,35
+2018,Social Sciences,42
+2019,Business,26
+2019,Engineering,27
+2019,Humanities,48
+2019,Natural Sciences,35
+2019,Social Sciences,42
+2020,Business,26
+2020,Engineering,26
+2020,Humanities,48
+2020,Natural Sciences,35
+2020,Social Sciences,41
+2021,Business,25
+2021,Engineering,26
+2021,Humanities,47
+2021,Natural Sciences,34
+2021,Social Sciences,41
+2022,Business,25
+2022,Engineering,25
+2022,Humanities,47
+2022,Natural Sciences,34
+2022,Social Sciences,40
+2023,Business,25
+2023,Engineering,25
+2023,Humanities,46
+2023,Natural Sciences,34
+2023,Social Sciences,40
+2024,Business,24
+2024,Engineering,24
+2024,Humanities,46
+2024,Natural Sciences,34
+2024,Social Sciences,40
+2025,Business,24
+2025,Engineering,24
+2025,Humanities,45
+2025,Natural Sciences,33
+2025,Social Sciences,39`;
+
+  // ── Palette & color scale ──
+  const palette = ['#4f8cff','#22c55e','#eab308','#ef4444','#a855f7','#14b8a6','#f97316','#06b6d4','#f43f5e','#84cc16'];
+  const clamp = (x, lo, hi) => Math.min(hi, Math.max(lo, x));
+  const percentToColor = (p) => {
+    const t = clamp((p - 20) / 40, 0, 1);
+    const r = Math.round((1-t)*22  + t*239);
+    const g = Math.round((1-t)*197 + t*68);
+    const b = Math.round((1-t)*94  + t*68);
+    return `rgb(${r},${g},${b})`;
+  };
+
+  // ── State ──
+  let rawRows = [], fields = [], years = [], selectedFields = new Set();
+  let chartType = 'bar', chart;
+
+  // ── DOM refs ──
+  const fileInput    = document.getElementById('file');
+  const fieldChips   = document.getElementById('field-chips');
+  const legend       = document.getElementById('legend');
+
+  // ── Chart type toggle ──
+  document.querySelectorAll('button[data-chart]').forEach(btn => {
+    btn.addEventListener('click', () => {
+      document.querySelectorAll('button[data-chart]').forEach(b => b.classList.remove('primary'));
+      btn.classList.add('primary');
+      chartType = btn.dataset.chart;
+      render();
+    });
+  });
+
+  // ── Upload CSV ──
+  document.querySelector('label.file-label').addEventListener('click', () => fileInput.click());
+  fileInput.addEventListener('change', (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+    Papa.parse(file, { header: true, skipEmptyLines: true, complete: (res) => loadRows(res.data) });
+  });
+
+  // ── Use demo data button ──
+  document.getElementById('use-sample').addEventListener('click', () => {
+    const parsed = Papa.parse(DEMO_CSV, { header: true, skipEmptyLines: true });
+    loadRows(parsed.data);
+  });
+
+  // ── Download template ──
+  document.getElementById('download-template').addEventListener('click', () => {
+    const blob = new Blob(['year,field,dropout_rate\n2024,Engineering,28\n2024,Humanities,50\n'], { type: 'text/csv' });
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = 'sample_phd_dropout.csv';
+    a.click();
+  });
+
+  // ── Reset filters ──
+  document.getElementById('reset-filters').addEventListener('click', () => {
+    selectedFields = new Set(fields);
+    render();
+  });
+
+  // ── Data loading ──
+  function normalizeRow(r) {
+    return {
+      year: +String(r.year).trim(),
+      field: String(r.field).trim(),
+      dropout_rate: +String(r.dropout_rate).replace('%','').trim()
+    };
+  }
+
+  function loadRows(rows) {
+    rawRows = rows.map(normalizeRow).filter(r => r.year && r.field && !isNaN(r.dropout_rate));
+    const allYears = [...new Set(rawRows.map(r => r.year))].sort((a,b) => a-b);
+    years = allYears.slice(-10);
+    fields = [...new Set(rawRows.filter(r => years.includes(r.year)).map(r => r.field))].sort();
+    selectedFields = new Set(fields);
+    render();
+  }
+
+  function buildMatrix() {
+    const m = {};
+    fields.forEach(f => { m[f] = {}; years.forEach(y => m[f][y] = null); });
+    rawRows.forEach(r => {
+      if (years.includes(r.year) && fields.includes(r.field)) m[r.field][r.year] = r.dropout_rate;
+    });
+    return m;
+  }
+
+  function render() {
+    if (!rawRows.length) return;
+    const m = buildMatrix();
+
+    // ── Chart ──
+    const datasets = fields.filter(f => selectedFields.has(f)).map((f, i) => ({
+      label: f,
+      data: years.map(y => m[f][y]),
+      borderColor: palette[i % palette.length],
+      backgroundColor: palette[i % palette.length] + '80',
+      tension: 0.25,
+      fill: false
+    }));
+
+    const ctx = document.getElementById('chart').getContext('2d');
+    if (chart) chart.destroy();
+    chart = new Chart(ctx, {
+      type: chartType,
+      data: { labels: years, datasets },
+      options: {
+        responsive: true,
+        scales: {
+          y: {
+            title: { display: true, text: 'Dropout rate (%)', color: '#98a2b3' },
+            min: 0, max: 100,
+            grid: { color: 'rgba(255,255,255,0.06)' },
+            ticks: { color: '#98a2b3' }
+          },
+          x: {
+            grid: { color: 'rgba(255,255,255,0.06)' },
+            ticks: { color: '#98a2b3' }
+          }
+        },
+        plugins: {
+          legend: { display: false },
+          tooltip: { callbacks: { label: (ctx) => `${ctx.dataset.label}: ${ctx.parsed.y}%` } }
+        }
+      }
+    });
+
+    // ── Field filter chips ──
+    fieldChips.innerHTML = '';
+    fields.forEach((f, i) => {
+      const chip = document.createElement('button');
+      chip.className = 'btn';
+      chip.style.borderColor = palette[i % palette.length];
+      chip.style.color = '#fff';
+      chip.style.background = selectedFields.has(f) ? palette[i % palette.length] : 'transparent';
+      chip.textContent = f;
+      chip.onclick = () => { selectedFields.has(f) ? selectedFields.delete(f) : selectedFields.add(f); render(); };
+      fieldChips.appendChild(chip);
+    });
+
+    // ── Legend ──
+    legend.innerHTML = '';
+    fields.forEach((f, i) => {
+      if (!selectedFields.has(f)) return;
+      const item = document.createElement('div'); item.className = 'item';
+      const sw = document.createElement('span'); sw.className = 'swatch'; sw.style.background = palette[i % palette.length];
+      const txt = document.createElement('span'); txt.textContent = f;
+      item.appendChild(sw); item.appendChild(txt);
+      legend.appendChild(item);
+    });
+
+    // ── Heatmap ──
+    const heatgrid = document.getElementById('heatgrid');
+    heatgrid.innerHTML = '';
+    const allVals = [];
+    Object.values(m).forEach(obj => years.forEach(y => { if (obj[y] != null) allVals.push(obj[y]); }));
+    heatgrid.style.gridTemplateColumns = `repeat(${years.length + 1}, minmax(60px, 1fr))`;
+
+    // Header row
+    const h0 = document.createElement('div'); h0.className = 'heatcell'; h0.style.fontWeight = '600'; h0.textContent = 'Field / Year'; heatgrid.appendChild(h0);
+    years.forEach(y => {
+      const h = document.createElement('div'); h.className = 'heatcell'; h.style.fontWeight = '600'; h.textContent = y; heatgrid.appendChild(h);
+    });
+
+    fields.forEach(f => {
+      const label = document.createElement('div'); label.className = 'heatcell'; label.style.textAlign = 'left'; label.style.fontWeight = '600'; label.textContent = f; heatgrid.appendChild(label);
+      years.forEach(y => {
+        const v = m[f][y];
+        const cell = document.createElement('div'); cell.className = 'heatcell';
+        if (v == null || !selectedFields.has(f)) {
+          cell.style.background = '#0b1220'; cell.textContent = '-';
+        } else {
+          cell.style.background = percentToColor(v);
+          cell.textContent = v + '%';
+          cell.title = `${f} ${y}: ${v}%`;
+        }
+        heatgrid.appendChild(cell);
+      });
+    });
+
+    // ── Table ──
+    const tbody = document.querySelector('#table tbody');
+    tbody.innerHTML = '';
+    rawRows.filter(r => years.includes(r.year))
+      .sort((a, b) => a.year - b.year || a.field.localeCompare(b.field))
+      .forEach(r => {
+        const tr = document.createElement('tr');
+        tr.innerHTML = `<td>${r.year}</td><td>${r.field}</td><td>${r.dropout_rate}%</td>`;
+        tbody.appendChild(tr);
+      });
+  }
+
+  // ── Auto-load demo data on page load ──
+  window.addEventListener('DOMContentLoaded', () => {
+    const parsed = Papa.parse(DEMO_CSV, { header: true, skipEmptyLines: true });
+    loadRows(parsed.data);
+  });
+</script>
+</body>
+</html>
